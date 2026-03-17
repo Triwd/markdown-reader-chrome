@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "Markdown Reader",
+  "version": "1.0.0",
+  "description": "在浏览器中优雅地查看 Markdown 文件，支持大纲导航",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "file://*/*.md",
+    "file://*/*.markdown",
+    "*://*/*.md",
+    "*://*/*.markdown"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "file://*/*.md",
+        "file://*/*.markdown",
+        "*://*/*.md",
+        "*://*/*.markdown"
+      ],
+      "js": ["js/content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "markdown-viewer.html", 
+        "css/*", 
+        "js/*",
+        "icons/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  }
+}

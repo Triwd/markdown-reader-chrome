@@ -1,0 +1,19 @@
+{
+  "name": "markdown-reader",
+  "version": "1.0.0",
+  "description": "Chrome extension for viewing Markdown files with outline navigation",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "chrome-extension",
+    "markdown",
+    "viewer",
+    "outline"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "marked": "^17.0.4"
+  }
+}
