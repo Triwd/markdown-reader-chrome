@@ -240,6 +240,40 @@
             color: #8c959f;
         }
         
+        /* 模式选择器 */
+        .mode-selector {
+            display: flex;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 6px 0;
+            border: none;
+            background: #f6f8fa;
+            font-size: 13px;
+            color: #57606a;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .mode-btn:not(:last-child) {
+            border-right: 1px solid #d0d7de;
+        }
+
+        .mode-btn.active {
+            background: #0969da;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .mode-btn:hover:not(.active) {
+            background: #eaeef2;
+        }
+
         /* 高级设置 */
         .advanced-toggle {
             display: flex;
@@ -293,7 +327,14 @@
                 <span id="statusText">正常</span>
             </span>
         </div>
-        
+
+        <div class="section-title" style="margin-top:4px;">打开模式</div>
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="auto">自动</button>
+            <button class="mode-btn" data-mode="ask">询问</button>
+            <button class="mode-btn" data-mode="off">关闭</button>
+        </div>
+
         <div class="toggle-group">
             <span class="toggle-label">显示大纲</span>
             <label class="toggle-switch">
@@ -377,34 +418,40 @@
         // 加载设置
         async function loadSettings() {
             const [syncResult, localResult] = await Promise.all([
-                chrome.storage.sync.get(['outlineVisible', 'theme']),
+                chrome.storage.sync.get(['outlineVisible', 'theme', 'mode']),
                 chrome.storage.local.get(['mdReaderConfig'])
             ]);
-            
+
             const config = localResult.mdReaderConfig || {};
-            
+
             document.getElementById('outlineToggle').checked = syncResult.outlineVisible !== false;
             document.getElementById('themeToggle').checked = syncResult.theme === 'dark';
             document.getElementById('autoUpdateToggle').checked = config.autoUpdate !== false;
-            document.getElementById('scrollSyncToggle').checked = 
+            document.getElementById('scrollSyncToggle').checked =
                 config.outlineOptions?.scrollSync !== false;
+
+            // 更新模式选择器
+            const mode = syncResult.mode || 'auto';
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
         }
-        
+
         // 保存设置
         async function saveSettings(key, value) {
-            if (['outlineVisible', 'theme'].includes(key)) {
+            if (['outlineVisible', 'theme', 'mode'].includes(key)) {
                 await chrome.storage.sync.set({ [key]: value });
             } else {
                 const result = await chrome.storage.local.get('mdReaderConfig');
                 const config = result.mdReaderConfig || {};
-                
+
                 if (key === 'autoUpdate') {
                     config.autoUpdate = value;
                 } else if (key === 'scrollSync') {
                     config.outlineOptions = config.outlineOptions || {};
                     config.outlineOptions.scrollSync = value;
                 }
-                
+
                 await chrome.storage.local.set({ mdReaderConfig: config });
             }
         }
@@ -514,6 +561,15 @@
             }
         }
         
+        // 模式选择器事件
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                saveSettings('mode', btn.dataset.mode);
+            });
+        });
+
         // 事件监听
         document.getElementById('outlineToggle').addEventListener('change', (e) => {
             saveSettings('outlineVisible', e.target.checked);
@@ -545,7 +601,7 @@
         document.getElementById('resetConfigBtn').addEventListener('click', async () => {
             if (confirm('确定要重置所有配置吗？此操作不可撤销。')) {
                 await chrome.storage.local.remove(['mdReaderConfig', 'mdReaderVersion']);
-                await chrome.storage.sync.remove(['outlineVisible', 'theme']);
+                await chrome.storage.sync.remove(['outlineVisible', 'theme', 'mode']);
                 loadSettings();
                 alert('配置已重置');
             }
