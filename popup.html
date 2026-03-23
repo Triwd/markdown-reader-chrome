@@ -418,7 +418,7 @@
         // 加载设置
         async function loadSettings() {
             const [syncResult, localResult] = await Promise.all([
-                chrome.storage.sync.get(['outlineVisible', 'theme', 'mode']),
+                chrome.storage.sync.get(['outlineVisible', 'theme']),
                 chrome.storage.local.get(['mdReaderConfig'])
             ]);
 
@@ -430,8 +430,8 @@
             document.getElementById('scrollSyncToggle').checked =
                 config.outlineOptions?.scrollSync !== false;
 
-            // 更新模式选择器
-            const mode = syncResult.mode || 'auto';
+            // 更新模式选择器（从 local 读取）
+            const mode = config.mode || 'auto';
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.mode === mode);
             });
@@ -439,13 +439,15 @@
 
         // 保存设置
         async function saveSettings(key, value) {
-            if (['outlineVisible', 'theme', 'mode'].includes(key)) {
+            if (['outlineVisible', 'theme'].includes(key)) {
                 await chrome.storage.sync.set({ [key]: value });
             } else {
                 const result = await chrome.storage.local.get('mdReaderConfig');
                 const config = result.mdReaderConfig || {};
 
-                if (key === 'autoUpdate') {
+                if (key === 'mode') {
+                    config.mode = value;
+                } else if (key === 'autoUpdate') {
                     config.autoUpdate = value;
                 } else if (key === 'scrollSync') {
                     config.outlineOptions = config.outlineOptions || {};
@@ -563,10 +565,10 @@
         
         // 模式选择器事件
         document.querySelectorAll('.mode-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', async () => {
                 document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                saveSettings('mode', btn.dataset.mode);
+                await saveSettings('mode', btn.dataset.mode);
             });
         });
 
@@ -601,7 +603,7 @@
         document.getElementById('resetConfigBtn').addEventListener('click', async () => {
             if (confirm('确定要重置所有配置吗？此操作不可撤销。')) {
                 await chrome.storage.local.remove(['mdReaderConfig', 'mdReaderVersion']);
-                await chrome.storage.sync.remove(['outlineVisible', 'theme', 'mode']);
+                await chrome.storage.sync.remove(['outlineVisible', 'theme']);
                 loadSettings();
                 alert('配置已重置');
             }

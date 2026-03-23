@@ -23,15 +23,13 @@ async function initializeExtension() {
     const defaultConfig = {
         version: '1.0.0',
         outlineVisible: true,
-        theme: 'light'
+        theme: 'light',
+        mode: 'auto'
     };
 
     await chrome.storage.local.set({
         mdReaderConfig: defaultConfig
     });
-
-    // 设置默认模式
-    await chrome.storage.sync.set({ mode: 'auto' });
 
     console.log('[MD Reader] 初始化完成');
 }
@@ -43,8 +41,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
         // 检查是否是 Markdown 文件
         if (isMarkdownUrl(url)) {
-            const result = await chrome.storage.sync.get('mode');
-            const mode = result.mode || 'auto';
+            const result = await chrome.storage.local.get('mdReaderConfig');
+            const mode = result.mdReaderConfig?.mode || 'auto';
 
             if (mode === 'auto') {
                 // 直接重定向到查看器

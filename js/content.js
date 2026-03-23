@@ -17,8 +17,8 @@
     if (!isMarkdown && !isMarkdownContentType) return;
 
     // 读取当前模式
-    const result = await chrome.storage.sync.get('mode');
-    const mode = result.mode || 'auto';
+    const result = await chrome.storage.local.get('mdReaderConfig');
+    const mode = result.mdReaderConfig?.mode || 'auto';
 
     if (mode === 'off') {
         // 关闭模式：不做任何处理
